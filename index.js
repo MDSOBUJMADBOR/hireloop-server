@@ -53,7 +53,11 @@ if(req.query.companyId){
 
 app.post('/api/jobs', async (req, res) => {
     const job = req.body;
-    const result = await jobCollection.insertOne(job);  
+    const newJob = {
+      ...job,
+      createdAt: new Date()
+    }
+    const result = await jobCollection.insertOne(newJob);  
     res.send(result);
 })
 
@@ -61,7 +65,11 @@ app.post('/api/jobs', async (req, res) => {
 
 app.post('/api/companies', async (req, res) => {
     const company = req.body;
-    const result = await companyCollection.insertOne(company);
+    const newCompany = {
+      ...company,
+      createdAt: new Date()
+    }
+    const result = await companyCollection.insertOne(newCompany);
     res.send(result);
 })
 
