@@ -8,7 +8,7 @@ require('dotenv').config()
 app.use(cors());
 app.use(express.json());
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = process.env.MONGO_DB_URI;
 
 
@@ -39,55 +39,70 @@ async function run() {
     const userCollection = database.collection("user");
 
 
-app.get('/api/user', async (req, res) => {  
-  const cursor = userCollection.find();
-  const result = await cursor.toArray();
+    app.get('/api/user', async (req, res) => {
+      const cursor = userCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    })
+
+
+
+    app.get('/api/jobs', async (req, res) => {
+      const query = {};
+      if (req.query.companyId) {
+        query.companyId = req.query.companyId;
+      }
+      if (req.query.status) {
+        query.status = req.query.status;
+      }
+      const cursor = jobCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result || {});
+    })
+
+app.get('/api/jobs/:id', async (req , res) => {
+  const id = req.params.id;
+  const query ={
+    _id: new ObjectId(id)
+  }
+  const result = await jobCollection.findOne(query);
   res.send(result);
 })
 
 
-app.get('/api/jobs', async (req, res) => {
-const query = {};
-if(req.query.companyId){
-    query.companyId = req.query.companyId;}
-    if(req.query.status){
-        query.status = req.query.status;
-    }
-    const cursor = jobCollection.find(query);
-    const result = await cursor.toArray();
-    res.send(result);
-})   
+    app.post('/api/jobs', async (req, res) => {
+      const job = req.body;
+      const newJob = {
+        ...job,
+        createdAt: new Date()
+      }
+      const result = await jobCollection.insertOne(newJob);
+      res.send(result);
+    })
 
-app.post('/api/jobs', async (req, res) => {
-    const job = req.body;
-    const newJob = {
-      ...job,
-      createdAt: new Date()
-    }
-    const result = await jobCollection.insertOne(newJob);  
-    res.send(result);
-})
+    //companty related apis
 
-//companty related apis
+    app.post('/api/companies', async (req, res) => {
+      const company = req.body;
+      const newCompany = {
+        ...company,
+        createdAt: new Date()
+      }
+      const result = await companyCollection.insertOne(newCompany);
+      res.send(result);
+    })
 
-app.post('/api/companies', async (req, res) => {
-    const company = req.body;
-    const newCompany = {
-      ...company,
-      createdAt: new Date()
-    }
-    const result = await companyCollection.insertOne(newCompany);
-    res.send(result);
-})
-
-app.get('/api/my/companies', async (req, res) => {
-    const query = {};
-    if(req.query.recruiterId){
+    app.get('/api/my/companies', async (req, res) => {
+      const query = {};
+      if (req.query.recruiterId) {
         query.recruiterId = req.query.recruiterId;
-    }
-    const result = await companyCollection.findOne(query);   
-    res.send(result);
-})
+
+      }
+      console.log(req.query.recruiterId,'req.query.recruiterId');
+      const result = await companyCollection.findOne(query);
+
+      res.send(result || {});
+    })
 
 
 
@@ -102,12 +117,6 @@ app.get('/api/my/companies', async (req, res) => {
   }
 }
 run().catch(console.dir);
-
-
-
-
-
-
 
 
 
